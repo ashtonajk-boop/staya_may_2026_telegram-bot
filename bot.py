@@ -4,8 +4,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 import os
-BOT_TOKEN = os.getenv("8770419775:AAFGT4G97akZr3ARdJpufRHg8luwLBmFTV8")
-
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 TARGET = datetime(2026, 5, 15, 9, 0, 0, tzinfo=MOSCOW_TZ)
 
