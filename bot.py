@@ -3,7 +3,8 @@ from zoneinfo import ZoneInfo
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-BOT_TOKEN = "8770419775:AAFGT4G97akZr3ARdJpufRHg8luwLBmFTV8"
+import os
+BOT_TOKEN = os.getenv("8770419775:AAFGT4G97akZr3ARdJpufRHg8luwLBmFTV8")
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 TARGET = datetime(2026, 5, 15, 9, 0, 0, tzinfo=MOSCOW_TZ)
@@ -32,7 +33,42 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def time_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.now(MOSCOW_TZ)
     remaining = TARGET - now
-    await update.message.reply_text(format_remaining(remaining))
+
+    total_seconds = int(remaining.total_seconds())
+
+    if total_seconds <= 0:
+        await update.message.reply_text("Время уже наступило!")
+        return
+
+    days = total_seconds // 86400
+    hours = total_seconds % 86400 // 3600
+    minutes = total_seconds % 3600 // 60
+    seconds = total_seconds % 60
+
+    # Получаем участников чата
+    chat = update.effective_chat
+    admins = await context.bot.get_chat_administrators(chat.id)
+
+    # Берем случайного участника из админов
+    import random
+    random_user = random.choice(admins).user
+
+    # Формируем тег
+    if random_user.username:
+        mention = f"@{random_user.username}"
+    else:
+        mention = random_user.first_name
+
+    text = (
+        f"Осталось: {days} дн. "
+        f"**{hours} ч. {minutes} мин. {seconds} сек.**\n\n"
+        f"{mention}, в эту минуту ты главный Петушок!"
+    )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="Markdown"
+    )
 
 
 def main():
