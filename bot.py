@@ -1,26 +1,55 @@
+import os
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-import os
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 TARGET = datetime(2026, 5, 15, 9, 0, 0, tzinfo=MOSCOW_TZ)
+
+
+# Сюда вручную добавь участников группы
+CHAT_MEMBERS = [
+    "@TrustNikki",
+    "@EvseevAleksandr",
+    "@Dakon",
+    "@MrKrakovich",
+    "@Oleg_Smolnikov",
+    "@starikovalex",
+    "@schepyotkin",
+    "@egor_kvach",
+    "@Titov_1_Kirill",
+    "@liukonenm",
+    "@shilolad",
+    "@timsay",
+    "@zuevgeniy",
+    "@mrKondrat"
+]
 
 
 def format_remaining(delta):
     total_seconds = int(delta.total_seconds())
 
     if total_seconds <= 0:
-        return "Время уже наступило!"
+        return None
 
     days = total_seconds // 86400
     hours = total_seconds % 86400 // 3600
     minutes = total_seconds % 3600 // 60
     seconds = total_seconds % 60
 
-    return f"Осталось: {days} дн. {hours} ч. {minutes} мин. {seconds} сек."
+    random_member = random.choice(CHAT_MEMBERS)
+
+    return (
+        f"Осталось: {days} дн. "
+        f"<b>{hours} ч. {minutes} мин. {seconds} сек.</b>\n"
+        f"{random_member}, в эту минуту ты главный Петушок!"
+    )
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -33,40 +62,15 @@ async def time_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.now(MOSCOW_TZ)
     remaining = TARGET - now
 
-    total_seconds = int(remaining.total_seconds())
+    text = format_remaining(remaining)
 
-    if total_seconds <= 0:
+    if text is None:
         await update.message.reply_text("Время уже наступило!")
         return
 
-    days = total_seconds // 86400
-    hours = total_seconds % 86400 // 3600
-    minutes = total_seconds % 3600 // 60
-    seconds = total_seconds % 60
-
-    # Получаем участников чата
-    chat = update.effective_chat
-    admins = await context.bot.get_chat_administrators(chat.id)
-
-    # Берем случайного участника из админов
-    import random
-    random_user = random.choice(admins).user
-
-    # Формируем тег
-    if random_user.username:
-        mention = f"@{random_user.username}"
-    else:
-        mention = random_user.first_name
-
-    text = (
-        f"Осталось: {days} дн. "
-        f"**{hours} ч. {minutes} мин. {seconds} сек.**\n\n"
-        f"{mention}, в эту минуту ты главный Петушок!"
-    )
-
     await update.message.reply_text(
         text,
-        parse_mode="Markdown"
+        parse_mode="HTML"
     )
 
 
